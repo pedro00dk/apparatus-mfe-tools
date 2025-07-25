@@ -1,0 +1,46 @@
+{
+    "name": "@_apparatus_/mfe-tools",
+    "description": "Plugin and runtime tools for building ECMAScript module-based micro-frontends (MFEs).",
+    "version": "0.0.0",
+    "type": "module",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/pedro00dk/apparatus-mfe-tools"
+    },
+    "author": {
+        "name": "Pedro Henrique",
+        "email": "pedro00dk@gmail.com"
+    },
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "types": "./dist/index.d.ts"
+        },
+        "./plugin": {
+            "import": "./dist/plugin.js",
+            "types": "./dist/plugin.d.ts"
+        }
+    },
+    "keywords": [
+        "micro-frontend",
+        "microfrontend",
+        "mfe",
+        "module",
+        "federation",
+        "vite",
+        "plugin",
+        "ECMAScript"
+    ],
+    "scripts": {
+        "build": "vite build && tsc",
+        "test": "node --test ./**/*.test.*"
+    },
+    "devDependencies": {
+        "@types/node": "24.0.15",
+        "magic-string": "0.30.17",
+        "typescript": "5.8.3",
+        "vite": "7.0.5"
+    }
+}
