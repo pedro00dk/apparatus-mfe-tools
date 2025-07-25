@@ -2,6 +2,7 @@
     "include": ["src"],
     "exclude": ["**/*.test.*"],
     "compilerOptions": {
+        "allowImportingTsExtensions": true,
         "erasableSyntaxOnly": true,
         "module": "esnext",
         "moduleResolution": "bundler",
