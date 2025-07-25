@@ -2,7 +2,7 @@
 
 [![bundle size](https://deno.bundlejs.com/?q=@_apparatus_/mfe-tools&badge=detailed)](https://bundlejs.com/?q=@_apparatus_/mfe-tools)
 
-A [Vite](https://vitejs.dev/) plugin and a runtime utility for building and managing ECMAScript module based micro-frontends (MFEs).
+Plugin and runtime tools for building ECMAScript module-based micro-frontends (MFEs).
 
 ## Key Features
 
