@@ -5,9 +5,7 @@ import { build, InlineConfig, Plugin, PluginOption } from 'vite'
 import indexDefault from './index.html?raw'
 
 declare global {
-    interface ImportMetaEnv {
-        MFE: '__mfe__'
-    }
+    const __mfe__: '__mfe__'
 
     interface Window {
         '__mfe__-shadow'?: WeakRef<ShadowRoot>
@@ -64,7 +62,7 @@ const mfeBase = (name: string): Plugin => ({
     name: 'mfe:base',
     config: ({ server: { port = 5173 } = {} }, { mode }) => ({
         base: './',
-        define: { 'import.meta.env.MFE': JSON.stringify(name) },
+        define: { __mfe__: JSON.stringify(name) },
         server: { cors: true, origin: mode === 'development' ? `http://localhost:${port}` : undefined },
         preview: { cors: true },
     }),
@@ -157,7 +155,7 @@ const mfeHtml = (entries: { [_ in string]: string }): Plugin => {
  */
 const mfeCss = (): Plugin => {
     const dispatch = (id: string, style: string) => {
-        const mfe = import.meta.env.MFE
+        const mfe = __mfe__
         const setup = !window[`${mfe}-styles`]
         const styles = (window[`${mfe}-styles`] ??= {})
         styles[id] = style
@@ -186,6 +184,9 @@ const mfeCss = (): Plugin => {
             const js = Object.values(bundle).filter(({ fileName }) => fileName.endsWith('.js')) as OutputChunk[]
             html.forEach(h => (h.source = (h.source as string).replaceAll(/<link.+href="\.\/.+\.css">/g, '')))
             js.forEach(chunk => {
+                if (chunk.name === 'remoteEntry.js') {
+                    console.log('Processing chunk', chunk)
+                }
                 const styles = css.filter(({ fileName }) => chunk.viteMetadata?.importedCss.has(fileName))
                 if (!styles.length) return
                 const id = JSON.stringify(chunk.name)
@@ -207,10 +208,7 @@ const mfeSolid = (): Plugin => ({
     name: 'mfe:solid',
     transform: code => {
         const ms = new MagicString(code)
-        ms.replaceAll(
-            'document.importNode',
-            `(window[\`\${import.meta.env.MFE}-shadow\`]?.deref()??document).importNode`,
-        )
+        ms.replaceAll('document.importNode', `(window[\`\${__mfe__}-shadow\`]?.deref()??document).importNode`)
         return { code: ms.toString(), map: ms.generateMap({ hires: true }) }
     },
 })
