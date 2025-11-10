@@ -5,7 +5,7 @@ import { build, InlineConfig, Plugin, PluginOption } from 'vite'
 import indexDefault from './index.html?raw'
 
 declare global {
-    const __mfe__: '__mfe__'
+    const __apparatus_mfe__: '__mfe__'
 
     interface Window {
         '__mfe__-shadow'?: WeakRef<ShadowRoot>
@@ -32,17 +32,37 @@ declare global {
  * @param entries.index Optional index.html entry.
  */
 export const mfe = (name: string, entries: { [_ in string]: string }): PluginOption => [
-    mfeBase(name),
+    mfeBase(),
     mfeEsm(entries),
     mfeHtml(entries),
     mfeCss(),
     mfeSolid(),
     mfeReact(),
+    mfeName(name),
 ]
 
 /**
+ * Inject the MFE name into the bundle.
+ *
+ * `config.define` is not used as it injects values in `window`, which could cause collisions between MFEs when running
+ * multiple MFEs locally under the same host application. Instead, a simple text replacement is performed.
+ *
+ * This plugin must be the last to run, as it replaces all occurrences of `__apparatus_mfe__`.
+ *
+ * @param name Mfe name.
+ */
+const mfeName = (name: string): Plugin => ({
+    name: 'mfe:name',
+    enforce: 'post',
+    transform: code => {
+        const ms = new MagicString(code)
+        ms.replaceAll('__apparatus_mfe__', JSON.stringify(name))
+        return { code: ms.toString(), map: ms.generateMap({ hires: true }) }
+    },
+})
+
+/**
  * MfeBase plugin sets configurations for proper MFE loading in production builds or development server.
- * This plugin also defines a `MFE` environment variable, which can be used by other plugins and by runtime code.
  *
  * ### Build
  *
@@ -58,11 +78,10 @@ export const mfe = (name: string, entries: { [_ in string]: string }): PluginOpt
  *
  * @param name MFE name.
  */
-const mfeBase = (name: string): Plugin => ({
+const mfeBase = (): Plugin => ({
     name: 'mfe:base',
     config: ({ server: { port = 5173 } = {} }, { mode }) => ({
         base: './',
-        define: { __mfe__: JSON.stringify(name) },
         server: { cors: true, origin: mode === 'development' ? `http://localhost:${port}` : undefined },
         preview: { cors: true },
     }),
@@ -155,7 +174,7 @@ const mfeHtml = (entries: { [_ in string]: string }): Plugin => {
  */
 const mfeCss = (): Plugin => {
     const dispatch = (id: string, style: string) => {
-        const mfe = __mfe__
+        const mfe = __apparatus_mfe__
         const setup = !window[`${mfe}-styles`]
         const styles = (window[`${mfe}-styles`] ??= {})
         styles[id] = style
@@ -208,7 +227,7 @@ const mfeSolid = (): Plugin => ({
     name: 'mfe:solid',
     transform: code => {
         const ms = new MagicString(code)
-        ms.replaceAll('document.importNode', `(window[\`\${__mfe__}-shadow\`]?.deref()??document).importNode`)
+        ms.replaceAll('document.importNode', `(window[\`\${__apparatus_mfe__}-shadow\`]?.deref()??document).importNode`)
         return { code: ms.toString(), map: ms.generateMap({ hires: true }) }
     },
 })

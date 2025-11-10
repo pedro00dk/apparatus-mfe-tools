@@ -15,10 +15,8 @@ export type MfeModule<TParams = object, TExports = object> = {
 
 /**
  * Return the MFE name.
- *
- * The environment variable defined by `plugin.ts` is only injected into this module when bundled by the MFE.
  */
-export const getMfe = () => __mfe__
+export const getMfe = () => __apparatus_mfe__
 
 /**
  * A FinalizationRegistry instance used to abort event handlers for garbage collected `getStyle` elements.
