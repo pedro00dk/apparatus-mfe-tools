@@ -33,21 +33,20 @@ declare global {
  */
 export const mfe = (name: string, entries: { [_ in string]: string }): PluginOption => [
     mfeBase(),
+    mfeName(name),
     mfeEsm(entries),
     mfeHtml(entries),
-    mfeCss(),
-    mfeSolid(),
+    mfeCss(name),
+    mfeSolid(name),
     mfeReact(),
-    mfeName(name),
 ]
 
 /**
  * Inject the MFE name into the bundle.
  *
  * `config.define` is not used as it injects values in `window`, which could cause collisions between MFEs when running
- * multiple MFEs locally under the same host application. Instead, a simple text replacement is performed.
- *
- * This plugin must be the last to run, as it replaces all occurrences of `__apparatus_mfe__`.
+ * multiple MFEs locally under the same host application. Instead, a simple text replacement is performed. There are no
+ * usages of `__apparatus_mfe__` in the plugin itself, since `name` is known. So the plugin order does not matter.
  *
  * @param name Mfe name.
  */
@@ -172,9 +171,8 @@ const mfeHtml = (entries: { [_ in string]: string }): Plugin => {
  *
  * @param name MFE name.
  */
-const mfeCss = (): Plugin => {
-    const dispatch = (id: string, style: string) => {
-        const mfe = __apparatus_mfe__
+const mfeCss = (name: string): Plugin => {
+    const dispatch = (mfe: '__mfe__', id: string, style: string) => {
         const setup = !window[`${mfe}-styles`]
         const styles = (window[`${mfe}-styles`] ??= {})
         styles[id] = style
@@ -185,17 +183,20 @@ const mfeCss = (): Plugin => {
     return {
         name: 'mfe:css',
         enforce: 'post',
-        transform: code =>
-            code
-                .replace(/__vite__updateStyle\(.+?\)/, `;(${dispatch})(__vite__id,__vite__css)`)
-                .replace(/__vite__removeStyle\(.+?\)/, `(${dispatch})(__vite__id,'')`),
+        transform: code => {
+            const mfe = JSON.stringify(name)
+            return code
+                .replace(/__vite__updateStyle\(.+?\)/, `;(${dispatch})(${mfe},__vite__id,__vite__css)`)
+                .replace(/__vite__removeStyle\(.+?\)/, `(${dispatch})(${mfe},__vite__id,'')`)
+        },
         async generateBundle(_, bundle) {
+            const mfe = JSON.stringify(name)
             const dispatchConfig: InlineConfig = {
                 logLevel: 'silent',
                 configFile: false,
                 define: this.environment.config.define,
                 build: { target: this.environment.config.build.target, rollupOptions: { input: 'dispatch' } },
-                plugins: [{ name: '-', resolveId: id => id, load: () => `(${dispatch})(__vite__id,__vite__css)` }],
+                plugins: [{ name: '-', resolveId: v => v, load: () => `(${dispatch})(${mfe},__vite__id,__vite__css)` }],
             }
             const compiled = ((await build(dispatchConfig)) as RollupOutput).output[0].code
             const html = Object.values(bundle).filter(({ fileName }) => fileName.endsWith('.html')) as OutputAsset[]
@@ -210,7 +211,7 @@ const mfeCss = (): Plugin => {
                 if (!styles.length) return
                 const id = JSON.stringify(chunk.name)
                 const style = JSON.stringify(styles.map(({ source }) => source.toString().trim()).join(''))
-                chunk.code = `${chunk.code}\n;${compiled.replace('(__vite__id,__vite__css)', `(${id},${style})`)}`
+                chunk.code = `${chunk.code}\n;${compiled.replace('__vite__id,__vite__css', `${id},${style}`)}`
                 chunk.viteMetadata?.importedCss.clear()
             })
         },
@@ -222,12 +223,17 @@ const mfeCss = (): Plugin => {
  *
  * This is required when using `@webcomponents/scoped-custom-element-registry` to use a shadow DOM as document.
  * Injection works by setting `window[`${env.MFE}-shadow`] to a `WeakRef` of the shadow root to be used.
+ *
+ * @name MFE name.
  */
-const mfeSolid = (): Plugin => ({
+const mfeSolid = (name: string): Plugin => ({
     name: 'mfe:solid',
     transform: code => {
         const ms = new MagicString(code)
-        ms.replaceAll('document.importNode', `(window[\`\${__apparatus_mfe__}-shadow\`]?.deref()??document).importNode`)
+        ms.replaceAll(
+            'document.importNode',
+            `(window[${JSON.stringify(`${name}-shadow`)}]?.deref()??document).importNode`,
+        )
         return { code: ms.toString(), map: ms.generateMap({ hires: true }) }
     },
 })
