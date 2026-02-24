@@ -1,8 +1,7 @@
 import MagicString from 'magic-string'
 import { readFileSync } from 'node:fs'
-import { OutputAsset, OutputChunk, RollupOutput } from 'rollup'
-import { build, InlineConfig, Plugin, PluginOption } from 'vite'
-import indexDefault from './index.html?raw'
+import { OutputAsset, OutputChunk } from 'rollup'
+import { Plugin, PluginOption } from 'vite'
 
 declare global {
     const __apparatus_mfe__: '__mfe__'
@@ -17,6 +16,20 @@ declare global {
         '__mfe__-styles-request': CustomEvent
     }
 }
+
+const indexDefault = `
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content="Template for running MFEs locally" />
+        <title>MFE</title>
+    </head>
+    <body></body>
+</html>
+
+`
 
 /**
  * MFE plugin container. See individual plugin functions for details.
@@ -180,38 +193,28 @@ const mfeCss = (name: string): Plugin => {
         if (setup) addEventListener(`${mfe}-styles-request`, () => dispatchEvent(event()))
         dispatchEvent(new Event(`${mfe}-styles-request`))
     }
+    const injector = `;(${dispatch})(${JSON.stringify(name)},__vite__id,__vite__css)`
+
     return {
         name: 'mfe:css',
         enforce: 'post',
         transform: code => {
-            const mfe = JSON.stringify(name)
             return code
-                .replace(/__vite__updateStyle\(.+?\)/, `;(${dispatch})(${mfe},__vite__id,__vite__css)`)
-                .replace(/__vite__removeStyle\(.+?\)/, `(${dispatch})(${mfe},__vite__id,'')`)
+                .replace(/__vite__updateStyle\(.+?\)/, injector)
+                .replace(/__vite__removeStyle\(.+?\)/, injector.slice(1).replace('__vite__css', "''"))
         },
         async generateBundle(_, bundle) {
-            const mfe = JSON.stringify(name)
-            const dispatchConfig: InlineConfig = {
-                logLevel: 'silent',
-                configFile: false,
-                define: this.environment.config.define,
-                build: { target: this.environment.config.build.target, rollupOptions: { input: 'dispatch' } },
-                plugins: [{ name: '-', resolveId: v => v, load: () => `(${dispatch})(${mfe},__vite__id,__vite__css)` }],
-            }
-            const compiled = ((await build(dispatchConfig)) as RollupOutput).output[0].code
+            const injector = `(${dispatch})(${mfe},__vite__id,__vite__css)`
             const html = Object.values(bundle).filter(({ fileName }) => fileName.endsWith('.html')) as OutputAsset[]
             const css = Object.values(bundle).filter(({ fileName }) => fileName.endsWith('.css')) as OutputAsset[]
             const js = Object.values(bundle).filter(({ fileName }) => fileName.endsWith('.js')) as OutputChunk[]
             html.forEach(h => (h.source = (h.source as string).replaceAll(/<link.+href="\.\/.+\.css">/g, '')))
             js.forEach(chunk => {
-                if (chunk.name === 'remoteEntry.js') {
-                    console.log('Processing chunk', chunk)
-                }
                 const styles = css.filter(({ fileName }) => chunk.viteMetadata?.importedCss.has(fileName))
                 if (!styles.length) return
                 const id = JSON.stringify(chunk.name)
                 const style = JSON.stringify(styles.map(({ source }) => source.toString().trim()).join(''))
-                chunk.code = `${chunk.code}\n;${compiled.replace('__vite__id,__vite__css', `${id},${style}`)}`
+                chunk.code = `${chunk.code}\n;${injector.replace('__vite__id,__vite__css', `${id},${style}`)}`
                 chunk.viteMetadata?.importedCss.clear()
             })
         },

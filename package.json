@@ -34,11 +34,11 @@
         "ECMAScript"
     ],
     "scripts": {
-        "build": "vite build && tsc",
-        "test": "node --test ./**/*.test.*"
+        "build": "tsc && bun build --outdir ./dist/ ./src/index.ts && bun build --target=node --external node:fs --outdir ./dist/ ./src/plugin.ts",
+        "test": "bun test --pass-with-no-tests"
     },
     "devDependencies": {
-        "@types/node": "24.10.0",
+        "@types/bun": "1.3.9",
         "magic-string": "0.30.21",
         "rollup": "4.53.1",
         "typescript": "5.9.3",
