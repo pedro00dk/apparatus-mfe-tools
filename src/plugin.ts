@@ -34,23 +34,23 @@ const indexDefault = `
 /**
  * MFE plugin container. See individual plugin functions for details.
  *
- * The MFE `name` can be anything, as long as it is unique when used together with multiple MFEs in a host application.
+ * `mfe` can be anything, as long as it is unique across all MFEs in a host application.
  *
  * Script `entries` keys should end in `.js`, e.g. `index.js`, `remoteEntry.js`. The key is the output filename.
  * Non-script entries are not supported, except for `index`, which replaces the template `index.html` file. It must not
  * include scripts to entries, they are added automatically.
  *
- * @param name MFE name.
+ * @param mfe MFE name.
  * @param entries Entries aliases and paths.
  * @param entries.index Optional index.html entry.
  */
-export const mfe = (name: string, entries: { [_ in string]: string }): PluginOption => [
+export const mfe = (mfe: string, entries: { [_ in string]: string }): PluginOption => [
     mfeBase(),
-    mfeName(name),
+    mfeName(mfe),
     mfeEsm(entries),
     mfeHtml(entries),
-    mfeCss(name),
-    mfeSolid(name),
+    mfeCss(mfe),
+    mfeSolid(mfe),
     mfeReact(),
 ]
 
@@ -59,16 +59,16 @@ export const mfe = (name: string, entries: { [_ in string]: string }): PluginOpt
  *
  * `config.define` is not used as it injects values in `window`, which could cause collisions between MFEs when running
  * multiple MFEs locally under the same host application. Instead, a simple text replacement is performed. There are no
- * usages of `__apparatus_mfe__` in the plugin itself, since `name` is known. So the plugin order does not matter.
+ * usages of `__apparatus_mfe__` in the plugin itself, since `mfe` is known. So the plugin order does not matter.
  *
- * @param name Mfe name.
+ * @param mfe Mfe name.
  */
-const mfeName = (name: string): Plugin => ({
+const mfeName = (mfe: string): Plugin => ({
     name: 'mfe:name',
     enforce: 'post',
     transform: code => {
         const ms = new MagicString(code)
-        ms.replaceAll('__apparatus_mfe__', JSON.stringify(name))
+        ms.replaceAll('__apparatus_mfe__', JSON.stringify(mfe))
         return { code: ms.toString(), map: ms.generateMap({ hires: true }) }
     },
 })
@@ -87,8 +87,6 @@ const mfeName = (name: string): Plugin => ({
  * Asset imports are not transformed to include the server origin as in build. `server.origin` is explicitly set to
  * `http://localhost:port` to ensure assets are fetched from localhost when accessed from another domain. `CORS` is
  * enabled for the same purpose.
- *
- * @param name MFE name.
  */
 const mfeBase = (): Plugin => ({
     name: 'mfe:base',
@@ -182,9 +180,9 @@ const mfeHtml = (entries: { [_ in string]: string }): Plugin => {
  *
  * The development server emit JS files modules for CSS. These modules are modified to dispatch events with CSS.
  *
- * @param name MFE name.
+ * @param mfe MFE name.
  */
-const mfeCss = (name: string): Plugin => {
+const mfeCss = (mfe: string): Plugin => {
     const dispatch = (mfe: '__mfe__', id: string, style: string) => {
         const setup = !window[`${mfe}-styles`]
         const styles = (window[`${mfe}-styles`] ??= {})
@@ -193,7 +191,7 @@ const mfeCss = (name: string): Plugin => {
         if (setup) addEventListener(`${mfe}-styles-request`, () => dispatchEvent(event()))
         dispatchEvent(new Event(`${mfe}-styles-request`))
     }
-    const injector = `;(${dispatch})(${JSON.stringify(name)},__vite__id,__vite__css)`
+    const injector = `;(${dispatch})(${JSON.stringify(mfe)},__vite__id,__vite__css)`
 
     return {
         name: 'mfe:css',
@@ -204,7 +202,6 @@ const mfeCss = (name: string): Plugin => {
                 .replace(/__vite__removeStyle\(.+?\)/, injector.slice(1).replace('__vite__css', "''"))
         },
         async generateBundle(_, bundle) {
-            const injector = `(${dispatch})(${mfe},__vite__id,__vite__css)`
             const html = Object.values(bundle).filter(({ fileName }) => fileName.endsWith('.html')) as OutputAsset[]
             const css = Object.values(bundle).filter(({ fileName }) => fileName.endsWith('.css')) as OutputAsset[]
             const js = Object.values(bundle).filter(({ fileName }) => fileName.endsWith('.js')) as OutputChunk[]
@@ -214,7 +211,7 @@ const mfeCss = (name: string): Plugin => {
                 if (!styles.length) return
                 const id = JSON.stringify(chunk.name)
                 const style = JSON.stringify(styles.map(({ source }) => source.toString().trim()).join(''))
-                chunk.code = `${chunk.code}\n;${injector.replace('__vite__id,__vite__css', `${id},${style}`)}`
+                chunk.code = `${chunk.code}\n\n${injector.replace('__vite__id,__vite__css', `${id},${style}`)}`
                 chunk.viteMetadata?.importedCss.clear()
             })
         },
@@ -227,15 +224,15 @@ const mfeCss = (name: string): Plugin => {
  * This is required when using `@webcomponents/scoped-custom-element-registry` to use a shadow DOM as document.
  * Injection works by setting `window[`${env.MFE}-shadow`] to a `WeakRef` of the shadow root to be used.
  *
- * @name MFE name.
+ * @param mfe MFE name.
  */
-const mfeSolid = (name: string): Plugin => ({
+const mfeSolid = (mfe: string): Plugin => ({
     name: 'mfe:solid',
     transform: code => {
         const ms = new MagicString(code)
         ms.replaceAll(
             'document.importNode',
-            `(window[${JSON.stringify(`${name}-shadow`)}]?.deref()??document).importNode`,
+            `(window[${JSON.stringify(`${mfe}-shadow`)}]?.deref()??document).importNode`,
         )
         return { code: ms.toString(), map: ms.generateMap({ hires: true }) }
     },
