@@ -4,6 +4,8 @@
 
 Plugin and runtime tools for building ECMAScript module-based micro-frontends (MFEs).
 
+Vite 8 supported only, for Vite 7 and lower use mfe-tools v3.
+
 ## Installation
 
 ```sh
@@ -12,12 +14,12 @@ npm install @_apparatus_/mfe-tools
 
 ## Features
 
--   🛠️ **Vite plugin** - Simplifies configuration and build process for MFEs
--   📦 **ES module** - Native ES modules for loading and managing dependencies
--   🎨 **CSS isolation** - Automatic style isolation per MFE using Shadow DOM
--   🛡️ **Shadow DOM** - Encapsulates content and prevents style conflicts
--   ⚛️ **Framework agnostic** - Works with any rendering library
--   🔄 **HMR compatible** - Hot module replacement during development
+- 🛠️ **Vite plugin** - Simplifies configuration and build process for MFEs
+- 📦 **ES module** - Native ES modules for loading and managing dependencies
+- 🎨 **CSS isolation** - Automatic style isolation per MFE using Shadow DOM
+- 🛡️ **Shadow DOM** - Encapsulates content and prevents style conflicts
+- ⚛️ **Framework agnostic** - Works with any rendering library
+- 🔄 **HMR compatible** - Hot module replacement during development
 
 ## Examples
 

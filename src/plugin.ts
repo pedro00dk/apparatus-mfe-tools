@@ -1,7 +1,7 @@
 import MagicString from 'magic-string'
 import { readFileSync } from 'node:fs'
-import { OutputAsset, OutputChunk } from 'rollup'
 import { Plugin, PluginOption } from 'vite'
+import { OutputAsset, OutputChunk } from '../node_modules/rolldown/dist/index.mjs'
 
 declare global {
     const __apparatus_mfe__: '__mfe__'
@@ -104,7 +104,7 @@ const mfeBase = (): Plugin => ({
  *
  * Exposes `entries` as ES modules using `build.options.output.format: es` allowing usage of native `import(<url>)`.
  * Exports are preserved using `build.options.preserveEntrySignatures: allow-extension` to avoid facade chunks.
- * `entries` are aliased using the `build.rollupOptions.output.entryFileNames`.
+ * `entries` are aliased using the `build.rolldownOptions.output.entryFileNames`.
  *
  * ### Serve
  *
@@ -120,7 +120,7 @@ const mfeEsm = (entries: { [_ in string]: string }): Plugin => {
         config: () => ({
             build: {
                 modulePreload: false,
-                rollupOptions: {
+                rolldownOptions: {
                     input: scripts,
                     output: { format: 'es', entryFileNames: ({ name }) => name },
                     preserveEntrySignatures: 'allow-extension',
@@ -139,7 +139,7 @@ const mfeEsm = (entries: { [_ in string]: string }): Plugin => {
  *
  * ### Build
  *
- * `index` is defined explicitly in `rollupOptions.input`. Contents are resolved from custom `resolveId` and `load`.
+ * `index` is defined explicitly in `rolldownOptions.input`. Contents are resolved from custom `resolveId` and `load`.
  *
  * ### Serve
  *
@@ -155,7 +155,7 @@ const mfeHtml = (entries: { [_ in string]: string }): Plugin => {
     const indexHtml = indexTemplate.replace('</head>', `${tags.join('')}</head>`)
     return {
         name: 'mfe:html',
-        config: () => ({ build: { rollupOptions: { input: { index: 'index.html' } } } }),
+        config: () => ({ build: { rolldownOptions: { input: { index: 'index.html' } } } }),
         resolveId: id => (id === 'index.html' ? id : undefined),
         load: id => (id === 'index.html' ? indexHtml : undefined),
         configureServer: server => () => {
