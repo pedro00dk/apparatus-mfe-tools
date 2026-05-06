@@ -9,6 +9,7 @@
         "declaration": true,
         "declarationDir": "./dist/",
         "emitDeclarationOnly": true,
+        "rootDir": "./src/",
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "skipLibCheck": true,
