@@ -33,7 +33,7 @@ export const getStyle = () => {
     const ref = new WeakRef(style)
     const controller = new AbortController()
     const { signal } = controller
-    addEventListener(`${getMfe()}-styles`, e => ref.deref()?.replaceChildren(e.detail), { signal })
+    addEventListener(`${getMfe()}-styles`, (e: CustomEvent) => ref.deref()?.replaceChildren(e.detail), { signal })
     dispatchEvent(new CustomEvent(`${getMfe()}-styles-request`))
     finalizationRegistry.register(style, controller)
     return style

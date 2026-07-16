@@ -1,20 +1,13 @@
 {
-    "include": ["src"],
-    "exclude": ["**/*.test.*"],
+    "include": ["src/**/*"],
     "compilerOptions": {
         "allowImportingTsExtensions": true,
-        "erasableSyntaxOnly": true,
-        "module": "esnext",
-        "moduleResolution": "bundler",
         "declaration": true,
-        "declarationDir": "./dist/",
         "emitDeclarationOnly": true,
+        "erasableSyntaxOnly": true,
+        "lib": ["ESNext", "DOM"],
+        "outDir": "./dist/",
         "rootDir": "./src/",
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "skipLibCheck": true,
-        "strict": true,
-        "target": "esnext",
-        "types": ["vite/client"]
+        "types": ["*"]
     }
 }
