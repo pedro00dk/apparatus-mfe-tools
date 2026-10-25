@@ -63,7 +63,8 @@ const setShadow = (shadow: ShadowRoot) => (window[`${getMfe()}-shadow`] = new We
  * - Set up the shadow root as the MFE container and make it available through `getShadow`.
  * - Subscribe to the style notifications using `getStyle` and append styles to the shadow root.
  *
- * The `render` dispose is returned.
+ * The `render` dispose is returned. If `render` is asynchronous, a synchronous dispose is returned instead, which
+ * waits for `render` to resolve and then calls its dispose, so the host contract stays synchronous.
  *
  * @param options Shadow root initialization options.
  * @param render MFE render function.
@@ -74,12 +75,16 @@ const setShadow = (shadow: ShadowRoot) => (window[`${getMfe()}-shadow`] = new We
 export const bootstrap =
     <TParams>(
         options: ShadowRootInit,
-        render: (shadow: ShadowRoot, params: Parameters<MfeModule<TParams>['default']>[1]) => () => void,
+        render: (
+            shadow: ShadowRoot,
+            params: Parameters<MfeModule<TParams>['default']>[1],
+        ) => (() => void) | Promise<() => void>,
     ): MfeModule<TParams>['default'] =>
     (host, params) => {
         host.dataset.mfe = host.dataset.test = getMfe()
         const shadow = host.attachShadow(options)
         setShadow(shadow)
         shadow.append(getStyle())
-        return render(shadow, params)
+        const dispose = render(shadow, params)
+        return () => Promise.try(() => dispose).then(d => d())
     }
