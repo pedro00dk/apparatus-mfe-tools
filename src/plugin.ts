@@ -1,5 +1,5 @@
-import MagicString from 'magic-string'
 import { readFileSync } from 'node:fs'
+import MagicString from 'magic-string'
 import { Plugin, PluginOption } from 'vite'
 import { OutputAsset, OutputChunk } from '../node_modules/rolldown/dist/index.mjs'
 

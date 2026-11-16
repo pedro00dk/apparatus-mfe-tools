@@ -1,28 +1,28 @@
 {
     "name": "@_apparatus_/mfe-tools",
-    "description": "Plugin and runtime tools for building ECMAScript module-based micro-frontends (MFEs).",
     "version": "4.1.3",
-    "type": "module",
+    "description": "Plugin and runtime tools for building ECMAScript module-based micro-frontends (MFEs).",
+    "keywords": [
+        "ECMAScript",
+        "federation",
+        "mfe",
+        "micro-frontend",
+        "microfrontend",
+        "module",
+        "plugin",
+        "vite"
+    ],
     "license": "MIT",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/pedro00dk/apparatus-mfe-tools"
-    },
     "author": {
         "name": "Pedro Henrique",
         "email": "pedro00dk@gmail.com"
     },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/pedro00dk/apparatus-mfe-tools"
+    },
+    "type": "module",
     "types": "dist/index.d.ts",
-    "keywords": [
-        "micro-frontend",
-        "microfrontend",
-        "mfe",
-        "module",
-        "federation",
-        "vite",
-        "plugin",
-        "ECMAScript"
-    ],
     "exports": {
         ".": {
             "import": "./dist/index.js",
@@ -33,17 +33,17 @@
             "types": "./dist/plugin.d.ts"
         }
     },
+    "scripts": {
+        "build": "bun build --check --outdir ./dist/ ./src/index.ts && bun build --check --target=node --external node:fs --outdir ./dist/ ./src/plugin.ts",
+        "test": "bun test --pass-with-no-tests"
+    },
     "devDependencies": {
-        "@types/bun": "1.4.2",
-        "magic-string": "1.4.2",
-        "typescript": "7.0.2",
-        "vite": "8.3.1"
+        "@types/bun": "1.4.4",
+        "magic-string": "1.4.5",
+        "vite": "8.3.8"
     },
     "peerDependencies": {
         "vite": "^8.0.0"
     },
-    "scripts": {
-        "build": "tsc && bun build --outdir ./dist/ ./src/index.ts && bun build --target=node --external node:fs --outdir ./dist/ ./src/plugin.ts",
-        "test": "bun test --pass-with-no-tests"
-    }
+    "packageManager": "bun@1.4.4"
 }

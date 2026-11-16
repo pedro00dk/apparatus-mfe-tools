@@ -26,8 +26,8 @@ npm install @_apparatus_/mfe-tools
 ### Basic plugin setup
 
 ```ts
-import { defineConfig } from 'vite'
 import { mfe } from '@_apparatus_/mfe-tools/plugin'
+import { defineConfig } from 'vite'
 
 export default defineConfig({
     plugins: [
@@ -41,8 +41,8 @@ export default defineConfig({
 ### Multiple entry points
 
 ```ts
-import { defineConfig } from 'vite'
 import { mfe } from '@_apparatus_/mfe-tools/plugin'
+import { defineConfig } from 'vite'
 
 export default defineConfig({
     plugins: [
@@ -58,8 +58,8 @@ export default defineConfig({
 ### Custom index.html
 
 ```ts
-import { defineConfig } from 'vite'
 import { mfe } from '@_apparatus_/mfe-tools/plugin'
+import { defineConfig } from 'vite'
 
 export default defineConfig({
     plugins: [
@@ -74,10 +74,10 @@ export default defineConfig({
 ### With plugins
 
 ```ts
-import { defineConfig } from 'vite'
-import tailwind from '@tailwindcss/vite'
-import solid from 'vite-plugin-solid'
 import { mfe } from '@_apparatus_/mfe-tools/plugin'
+import tailwind from '@tailwindcss/vite'
+import { defineConfig } from 'vite'
+import solid from 'vite-plugin-solid'
 
 export default defineConfig({
     plugins: [
