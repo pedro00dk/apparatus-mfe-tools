@@ -34,12 +34,13 @@
         }
     },
     "scripts": {
-        "build": "bun build --check --outdir ./dist/ ./src/index.ts && bun build --check --target=node --external node:fs --outdir ./dist/ ./src/plugin.ts",
+        "build": "tsc && bun build --outdir ./dist/ ./src/index.ts && bun build --target=node --external node:fs --outdir ./dist/ ./src/plugin.ts",
         "test": "bun test --pass-with-no-tests"
     },
     "devDependencies": {
         "@types/bun": "1.4.4",
         "magic-string": "1.4.5",
+        "typescript": "7.0.2",
         "vite": "8.3.8"
     },
     "peerDependencies": {
