@@ -1,6 +1,6 @@
 {
     "name": "@_apparatus_/mfe-tools",
-    "version": "4.1.3",
+    "version": "4.2.0",
     "description": "Plugin and runtime tools for building ECMAScript module-based micro-frontends (MFEs).",
     "keywords": [
         "ECMAScript",
